@@ -8,7 +8,7 @@
  * Token economy: every call MUST pass a tight `maxTokens` cap. Output tokens
  * are what burn NIM credits, so keep them as small as the UI allows.
  */
-const NIM_API_KEY = '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';
+const NIM_API_KEY = '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';
 // Goes through the Vite proxy (see vite.config.ts) to dodge NVIDIA's lack of
 // CORS headers. The proxy strips "/nim" and forwards to integrate.api.nvidia.com.
 const NIM_URL = '/nim/v1/chat/completions';

@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/nim/:path*",
+      "destination": "https://integrate.api.nvidia.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

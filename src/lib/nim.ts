@@ -11,7 +11,7 @@
 const NIM_API_KEY = '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';
 // Goes through the Vite proxy (see vite.config.ts) to dodge NVIDIA's lack of
 // CORS headers. The proxy strips "/nim" and forwards to integrate.api.nvidia.com.
-const NIM_URL = '/nim/v1/chat/completions';
+const NIM_URL = '/api/nim';
 // Small, fast, cheap model — best token-per-credit value for short answers.
 const NIM_MODEL = 'meta/llama-3.1-8b-instruct';
 

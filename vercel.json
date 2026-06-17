@@ -1,11 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/nim/:path*",
-      "destination": "https://integrate.api.nvidia.com/:path*"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

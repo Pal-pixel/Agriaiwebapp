@@ -49,6 +49,9 @@ export default function Home() {
     setError(null);
     try {
       const rawResult = await analyzeLeafImage(file);
+      if (rawResult.includes('Invalid Image') || rawResult.includes('not a crop leaf')) {
+        throw new Error(t('home.errInvalidImage'));
+      }
       navigate('/results', { state: { rawResult } });
     } catch (err) {
       const message = err instanceof Error ? err.message : t('home.errNet');

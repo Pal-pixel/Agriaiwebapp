@@ -25,7 +25,9 @@
       "Bash(curl -sL -o /tmp/leaf.jpg \"https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Tomato_leaf_with_late_blight.jpg/640px-Tomato_leaf_with_late_blight.jpg\")",
       "Read(//tmp/**)",
       "Bash(xxd)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "WebFetch(domain:huggingface.co)",
+      "WebFetch(domain:bhargavsavaliya-agri-ai-backend.hf.space)"
     ]
   }
 }

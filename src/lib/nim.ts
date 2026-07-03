@@ -8,10 +8,9 @@
  * Token economy: every call MUST pass a tight `maxTokens` cap. Output tokens
  * are what burn Groq credits, so keep them as small as the UI allows.
  */
-const GROQ_API_KEY = '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';
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-// llama-3.1-8b-instant is the Groq equivalent of NIM's meta/llama-3.1-8b-instruct
-const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const GROQ_URL = '/api/nim';
+// llama-3.1-8b-instant is a highly responsive, active model for fast inferences
+const GROQ_MODEL = 'llama-3.1-8b-instant';
 
 export interface NimOptions {
   /** Optional system instruction (keep it short — it counts as input tokens). */
@@ -41,7 +40,6 @@ export async function callNim(prompt: string, opts: NimOptions = {}): Promise<st
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify(body),
   });
@@ -53,3 +51,4 @@ export async function callNim(prompt: string, opts: NimOptions = {}): Promise<st
   if (!text) throw new Error('Empty response from Groq');
   return text;
 }
+

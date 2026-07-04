@@ -3,7 +3,7 @@ export const config = { runtime: 'edge' };
 export default async function handler(req: Request): Promise<Response> {
   const body = await req.text();
 
-  const apiKey = process.env.GROQ_API_KEY || '';
+  const apiKey = process.env.GROQ_API_KEY || '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';
 
   const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',

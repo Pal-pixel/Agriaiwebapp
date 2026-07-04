@@ -75,6 +75,7 @@ export default async function handler(req: Request): Promise<Response> {
     let buffer = '';
     let predictionResult = '';
     let streamError = '';
+    let currentEvent = '';
 
     while (true) {
       const { done, value } = await reader.read();
@@ -84,25 +85,26 @@ export default async function handler(req: Request): Promise<Response> {
       const lines = buffer.split('\n');
       buffer = lines.pop() || ''; // Keep the last incomplete line in buffer
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line === 'event: error') {
-          const nextLine = lines[i + 1] || '';
-          if (nextLine.startsWith('data: ')) {
-            streamError = nextLine.slice(6).trim();
-            break;
-          }
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          currentEvent = '';
+          continue;
         }
-        if (line === 'event: complete') {
-          const nextLine = lines[i + 1] || '';
-          if (nextLine.startsWith('data: ')) {
+
+        if (trimmed.startsWith('event:')) {
+          currentEvent = trimmed.slice(6).trim();
+        } else if (trimmed.startsWith('data:')) {
+          const dataContent = trimmed.slice(5).trim();
+          if (currentEvent === 'complete') {
             try {
-              const data = JSON.parse(nextLine.slice(6)) as unknown[];
+              const data = JSON.parse(dataContent) as unknown[];
               predictionResult = String(data[0]);
             } catch (e) {
               streamError = 'Failed to parse prediction result';
             }
-            break;
+          } else if (currentEvent === 'error') {
+            streamError = dataContent;
           }
         }
       }

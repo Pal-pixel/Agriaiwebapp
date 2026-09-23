@@ -440,17 +440,10 @@ export default function Results() {
       setDiseaseData(normalizeDiseaseData(parsed, base));
       setCachedDetail(diseaseName, cropName, lang, parsed);
       setInfoError(null);
-    } catch (err) {
-      setInfoError(err instanceof Error ? err.message : 'Failed to load disease details.');
-      setDiseaseData({
-        ...base,
-        summary: '',
-        pesticides: [],
-        nonPesticideMethods: [],
-        preventionTips: [],
-        economicImpact: '',
-        treatmentUrgency: '',
-      });
+    } catch (_) {
+      const fallbackData = normalizeDiseaseData({}, base);
+      setDiseaseData(fallbackData);
+      setInfoError(null);
     } finally {
       setLoadingInfo(false);
     }

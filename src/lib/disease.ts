@@ -179,32 +179,145 @@ function toStringArray(v: unknown): string[] {
 
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : v == null ? '' : String(v));
 
+export function getFallbackDiseaseDetails(disease: string, crop: string): Partial<DiseaseData> {
+  const dLower = disease.toLowerCase();
+
+  const isViral = dLower.includes('virus') || dLower.includes('mosaic') || dLower.includes('curl');
+  const isBacterial = dLower.includes('bacterial') || dLower.includes('wilt') || dLower.includes('canker');
+
+  let pesticides: PesticideItem[] = [];
+  if (isViral) {
+    pesticides = [
+      {
+        name: 'Imidacloprid 17.8% SL',
+        type: 'Insecticide (Vector Control)',
+        description: 'Controls sucking pests (whiteflies/aphids) that transmit plant viruses.',
+        howToUse: ['Mix 0.5 ml per litre of water.', 'Foliar spray thoroughly on foliage.'],
+        dosage: '0.5 ml/litre',
+        frequency: 'every 10-14 days',
+        safetyNote: 'Toxic to bees; avoid spraying during peak bloom.',
+        preHarvestInterval: '7 days',
+        reEntryPeriod: '24 hours',
+      },
+      {
+        name: 'Neem Oil (10,000 ppm)',
+        type: 'Bio-Insecticide',
+        description: 'Organic repellent for vectors and nymphal stages.',
+        howToUse: ['Mix 3-5 ml per litre of water.', 'Spray early morning or evening.'],
+        dosage: '3-5 ml/litre',
+        frequency: 'every 7 days',
+        safetyNote: 'Safe for beneficial insects.',
+        preHarvestInterval: '1 day',
+        reEntryPeriod: '12 hours',
+      },
+    ];
+  } else if (isBacterial) {
+    pesticides = [
+      {
+        name: 'Copper Oxychloride 50% WP (Koptrol)',
+        type: 'Bactericide/Fungicide',
+        description: 'Contact bactericide that prevents bacterial multiplication on leaves.',
+        howToUse: ['Mix 2.5 g per litre of water.', 'Spray evenly over the canopy.'],
+        dosage: '2.5 g/litre',
+        frequency: 'every 7-10 days',
+        safetyNote: 'Wear gloves during mixing.',
+        preHarvestInterval: '7 days',
+        reEntryPeriod: '24 hours',
+      },
+      {
+        name: 'Streptocycline (Streptomycin + Tetracycline)',
+        type: 'Bactericide',
+        description: 'Systemic bactericide for controlling severe bacterial infections.',
+        howToUse: ['Mix 6 g per 50 litres of water.', 'Spray immediately upon first symptom.'],
+        dosage: '0.12 g/litre',
+        frequency: 'every 10 days',
+        safetyNote: 'Do not exceed recommended dosage.',
+        preHarvestInterval: '14 days',
+        reEntryPeriod: '24 hours',
+      },
+    ];
+  } else {
+    // Default Fungal / General foliar disease
+    pesticides = [
+      {
+        name: 'Kavach (Chlorothalonil 75% WP)',
+        type: 'Fungicide',
+        description: 'Broad-spectrum protective fungicide for foliar spots and blights.',
+        howToUse: ['Mix 2 g per litre of water.', 'Spray thoroughly covering upper and lower leaf surfaces.'],
+        dosage: '2 g/litre',
+        frequency: 'every 7-10 days',
+        safetyNote: 'Avoid contact with eyes and skin.',
+        preHarvestInterval: '7 days',
+        reEntryPeriod: '24 hours',
+      },
+      {
+        name: 'Amistar (Azoxystrobin 23% SC)',
+        type: 'Systemic Fungicide',
+        description: 'Systemic action for effective control of leaf spots and rusts.',
+        howToUse: ['Mix 1 ml per litre of water.', 'Apply at early symptom appearance.'],
+        dosage: '1 ml/litre',
+        frequency: 'every 10-14 days',
+        safetyNote: 'Do not spray near aquatic bodies.',
+        preHarvestInterval: '7 days',
+        reEntryPeriod: '24 hours',
+      },
+    ];
+  }
+
+  return {
+    summary: `${disease.replace(/_/g, ' ')} affecting ${crop}. Infection causes leaf discoloration and spotting, reducing photosynthetic capacity and yield potential.`,
+    treatmentUrgency: 'Immediate Action Required',
+    economicImpact: 'Causes leaf loss and can reduce overall crop yield if left unmanaged.',
+    pesticides,
+    nonPesticideMethods: [
+      `Remove and burn severely infected leaves of ${crop} to prevent spore spread.`,
+      'Ensure proper field drainage and avoid excessive overhead irrigation.',
+    ],
+    preventionTips: [
+      `Practice crop rotation with non-host crops for 2–3 seasons.`,
+      'Use certified disease-resistant seeds and maintain proper plant spacing for ventilation.',
+    ],
+  };
+}
+
 /** Merge the parsed model JSON with the locally-parsed base fields into DiseaseData. */
 export function normalizeDiseaseData(
   parsed: any,
   base: Pick<DiseaseData, 'disease' | 'crop' | 'confidence' | 'severity' | 'healthScore'>,
 ): DiseaseData {
-  const pesticides: PesticideItem[] = Array.isArray(parsed?.pesticides)
-    ? parsed.pesticides.map((p: any) => ({
-        name: str(p?.name),
-        type: str(p?.type),
-        description: str(p?.description),
-        howToUse: toStringArray(p?.howToUse),
-        dosage: str(p?.dosage),
-        frequency: str(p?.frequency),
-        safetyNote: str(p?.safetyNote),
-        preHarvestInterval: str(p?.preHarvestInterval ?? p?.phi),
-        reEntryPeriod: str(p?.reEntryPeriod ?? p?.reEntry),
-      }))
+  const fallback = getFallbackDiseaseDetails(base.disease, base.crop);
+
+  let pesticides: PesticideItem[] = Array.isArray(parsed?.pesticides)
+    ? parsed.pesticides
+        .map((p: any) => ({
+          name: str(p?.name),
+          type: str(p?.type),
+          description: str(p?.description),
+          howToUse: toStringArray(p?.howToUse),
+          dosage: str(p?.dosage),
+          frequency: str(p?.frequency),
+          safetyNote: str(p?.safetyNote),
+          preHarvestInterval: str(p?.preHarvestInterval ?? p?.phi),
+          reEntryPeriod: str(p?.reEntryPeriod ?? p?.reEntry),
+        }))
+        .filter((p: PesticideItem) => p.name)
     : [];
+
+  if (pesticides.length === 0 && fallback.pesticides) {
+    pesticides = fallback.pesticides;
+  }
+
+  const summary = str(parsed?.summary) || fallback.summary || '';
+  const nonPesticideMethods = toStringArray(parsed?.nonPesticideMethods);
+  const preventionTips = toStringArray(parsed?.preventionTips);
 
   return {
     ...base,
-    summary: str(parsed?.summary),
+    summary,
     pesticides,
-    nonPesticideMethods: toStringArray(parsed?.nonPesticideMethods),
-    preventionTips: toStringArray(parsed?.preventionTips),
-    economicImpact: str(parsed?.economicImpact),
-    treatmentUrgency: str(parsed?.treatmentUrgency),
+    nonPesticideMethods: nonPesticideMethods.length > 0 ? nonPesticideMethods : (fallback.nonPesticideMethods || []),
+    preventionTips: preventionTips.length > 0 ? preventionTips : (fallback.preventionTips || []),
+    economicImpact: str(parsed?.economicImpact) || fallback.economicImpact || '',
+    treatmentUrgency: str(parsed?.treatmentUrgency) || fallback.treatmentUrgency || 'Immediate Action Required',
   };
 }

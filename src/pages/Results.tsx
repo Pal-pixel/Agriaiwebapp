@@ -429,7 +429,7 @@ export default function Results() {
       // larger spend happens only once per disease/crop/language.
       const rawJson = await callNim(buildDiseaseInfoPrompt(diseaseName, cropName, aiLangInstruction(lang)), {
         system: DISEASE_SYSTEM,
-        maxTokens: lang === 'en' ? 1200 : 1600,
+        maxTokens: 2000,
         // A little randomness + the disease-specific prompt stops the model
         // collapsing to the same generic Mancozeb/Copper for every disease.
         temperature: 0.4,

@@ -1,16 +1,10 @@
 /**
- * nim.ts — thin wrapper around Groq's OpenAI-compatible chat API.
+ * nim.ts — thin wrapper around Gemini's OpenAI-compatible chat API via /api/nim.
  *
- * NOTE: the API key is shipped to the browser. For a public website you
- * should proxy this through a small backend so the key is not exposed.
- * Left inline here to preserve the original app's behaviour.
- *
- * Token economy: every call MUST pass a tight `maxTokens` cap. Output tokens
- * are what burn Groq credits, so keep them as small as the UI allows.
+ * Token economy: every call MUST pass a tight `maxTokens` cap.
  */
-const GROQ_URL = '/api/nim';
-// llama-3.1-8b-instant is a highly responsive, active model for fast inferences
-const GROQ_MODEL = 'llama-3.1-8b-instant';
+const API_URL = '/api/nim';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export interface NimOptions {
   /** Optional system instruction (keep it short — it counts as input tokens). */
@@ -29,14 +23,14 @@ export async function callNim(prompt: string, opts: NimOptions = {}): Promise<st
   messages.push({ role: 'user', content: prompt });
 
   const body: Record<string, unknown> = {
-    model: GROQ_MODEL,
+    model: GEMINI_MODEL,
     messages,
     temperature: opts.temperature ?? 0.3,
     max_tokens: opts.maxTokens ?? 120,
   };
   if (opts.json) body.response_format = { type: 'json_object' };
 
-  const res = await fetch(GROQ_URL, {
+  const res = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -45,10 +39,10 @@ export async function callNim(prompt: string, opts: NimOptions = {}): Promise<st
   });
 
   const json = await res.json();
-  if (json.error) throw new Error(`Groq API error: ${json.error.message || JSON.stringify(json.error)}`);
+  if (json.error) throw new Error(`Gemini API error: ${json.error.message || JSON.stringify(json.error)}`);
 
   const text = json.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Empty response from Groq');
+  if (!text) throw new Error('Empty response from Gemini API');
   return text;
 }
 

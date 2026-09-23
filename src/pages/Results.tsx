@@ -419,6 +419,7 @@ export default function Results() {
     if (cached) {
       setDiseaseData(normalizeDiseaseData(cached, base));
       setFromCache(true);
+      setInfoError(null);
       setLoadingInfo(false);
       return;
     }
@@ -438,6 +439,7 @@ export default function Results() {
       const parsed = extractJson(rawJson);
       setDiseaseData(normalizeDiseaseData(parsed, base));
       setCachedDetail(diseaseName, cropName, lang, parsed);
+      setInfoError(null);
     } catch (err) {
       setInfoError(err instanceof Error ? err.message : 'Failed to load disease details.');
       setDiseaseData({

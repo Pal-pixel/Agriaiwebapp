@@ -105,17 +105,58 @@ export function buildChatPrompt(question: string, data: DiseaseData | null): str
 // objects instead of strings. These helpers coerce whatever comes back into
 // the exact shape the UI needs, so the detail page can never crash on parse.
 
-/** Pull a JSON object out of a raw reply, tolerating ```fences``` and stray text. */
+/** Pull a JSON object out of a raw reply, tolerating ```fences```, unescaped newlines, trailing commas, and stray text. */
 export function extractJson(raw: string): any {
-  const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+  if (typeof raw !== 'string' || !raw.trim()) {
+    throw new Error('Response was empty');
+  }
+  let cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+  // 1. Direct JSON.parse
   try {
     return JSON.parse(cleaned);
-  } catch {
-    const start = cleaned.indexOf('{');
-    const end = cleaned.lastIndexOf('}');
-    if (start !== -1 && end > start) return JSON.parse(cleaned.slice(start, end + 1));
-    throw new Error('Response was not valid JSON');
+  } catch (_) {}
+
+  // 2. Extract outermost { ... } block
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    cleaned = cleaned.slice(start, end + 1);
   }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (_) {}
+
+  // 3. Remove trailing commas before closing braces/brackets
+  const noTrailingCommas = cleaned.replace(/,\s*([\}\]])/g, '$1');
+  try {
+    return JSON.parse(noTrailingCommas);
+  } catch (_) {}
+
+  // 4. Escape literal raw newlines/tabs inside string values
+  let inside = false;
+  let out = '';
+  for (let i = 0; i < noTrailingCommas.length; i++) {
+    const char = noTrailingCommas[i];
+    const prev = noTrailingCommas[i - 1];
+    if (char === '"' && prev !== '\\') {
+      inside = !inside;
+      out += char;
+    } else if (inside && (char === '\n' || char === '\r')) {
+      out += '\\n';
+    } else if (inside && char === '\t') {
+      out += ' ';
+    } else {
+      out += char;
+    }
+  }
+
+  try {
+    return JSON.parse(out);
+  } catch (_) {}
+
+  throw new Error('Response was not valid JSON');
 }
 
 /** Coerce any value into a clean array of non-empty strings. */
